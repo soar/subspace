@@ -19,6 +19,7 @@ var (
 	validPassword = regexp.MustCompile(`^[ -~]{6,200}$`)
 	validString   = regexp.MustCompile(`^[ -~]{1,200}$`)
 	maxProfiles   = 250
+	errorFile     = "/tmp/error.txt"
 )
 
 func getEnv(key, fallback string) string {
@@ -483,13 +484,13 @@ WGCLIENT
 		ipv6Enabled,
 	})
 	if err != nil {
-		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=addprofile")
+		logErrorAndRedirect(err, w, errorFile, "/?error=addprofile")
 		return
 	}
 
 	_, err = serverConfig.Update()
 	if err != nil {
-		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=addprofile")
+		logErrorAndRedirect(err, w, errorFile, "/?error=addprofile")
 		return
 	}
 
@@ -537,7 +538,7 @@ func profileDeleteHandler(w *Web) {
 	}
 	_, err = serverConfig.Update()
 	if err != nil {
-		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=deleteprofile")
+		logErrorAndRedirect(err, w, errorFile, "/?error=deleteprofile")
 		return
 	}
 	if profile.UserID != "" {
