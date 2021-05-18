@@ -54,6 +54,8 @@ Join the slack community over at the [gophers](https://invite.slack.golangbridge
 - **Auto-generated Configs**
   - Each client gets a unique downloadable config file.
   - Generates a QR code for easy importing on iOS and Android.
+- **Monitoring**
+  - Supports [prometheus's wireguard exporter](https://github.com/MindFlavor/prometheus_wireguard_exporter) `friendly_json`
 
 ## Contributing
 
@@ -190,30 +192,91 @@ $ sudo docker logs subspace
 
 #### Docker-Compose Example
 
-```
+```yaml
 version: "3.3"
 services:
   subspace:
-   image: subspacecommunity/subspace:latest
-   container_name: subspace
-   volumes:
-    - /opt/docker/subspace:/data
-   restart: always
-   environment:
-    - SUBSPACE_HTTP_HOST=subspace.example.org
-    - SUBSPACE_LETSENCRYPT=true
-    - SUBSPACE_HTTP_INSECURE=false
-    - SUBSPACE_HTTP_ADDR=":80"
-    - SUBSPACE_NAMESERVERS=1.1.1.1,8.8.8.8
-    - SUBSPACE_LISTENPORT=51820
-    - SUBSPACE_IPV4_POOL=10.99.97.0/24
-    - SUBSPACE_IPV6_POOL=fd00::10:97:0/64
-    - SUBSPACE_IPV4_GW=10.99.97.1
-    - SUBSPACE_IPV6_GW=fd00::10:97:1
-    - SUBSPACE_IPV6_NAT_ENABLED=1
-   cap_add:
-    - NET_ADMIN
-   network_mode: "host"
+    image: subspacecommunity/subspace:latest
+    container_name: subspace
+    volumes:
+      - /opt/docker/subspace:/data
+    restart: always
+    environment:
+      - SUBSPACE_HTTP_HOST=subspace.example.org
+      - SUBSPACE_LETSENCRYPT=true
+      - SUBSPACE_HTTP_INSECURE=false
+      - SUBSPACE_HTTP_ADDR=":80"
+      - SUBSPACE_NAMESERVERS=1.1.1.1,8.8.8.8
+      - SUBSPACE_LISTENPORT=51820
+      - SUBSPACE_IPV4_POOL=10.99.97.0/24
+      - SUBSPACE_IPV6_POOL=fd00::10:97:0/64
+      - SUBSPACE_IPV4_GW=10.99.97.1
+      - SUBSPACE_IPV6_GW=fd00::10:97:1
+      - SUBSPACE_IPV6_NAT_ENABLED=1
+    cap_add:
+      - NET_ADMIN
+    network_mode: "host"
+```
+
+#### Using the prometheus exporter
+
+```yaml
+version: "3.3"
+services:
+  subspace:
+    image: subspacecommunity/subspace:latest
+    container_name: subspace
+    volumes:
+      - /opt/docker/subspace:/data
+    restart: always
+    environment:
+      - SUBSPACE_HTTP_HOST=subspace.example.org
+      - SUBSPACE_LETSENCRYPT=true
+      - SUBSPACE_HTTP_INSECURE=false
+      - SUBSPACE_HTTP_ADDR=":80"
+      - SUBSPACE_NAMESERVERS=1.1.1.1,8.8.8.8
+      - SUBSPACE_LISTENPORT=51820
+      - SUBSPACE_IPV4_POOL=10.99.97.0/24
+      - SUBSPACE_IPV6_POOL=fd00::10:97:0/64
+      - SUBSPACE_IPV4_GW=10.99.97.1
+      - SUBSPACE_IPV6_GW=fd00::10:97:1
+      - SUBSPACE_IPV6_NAT_ENABLED=1
+    cap_add:
+      - NET_ADMIN
+    network_mode: "host"
+  prometheus_exporter:
+    image: mindflavor/prometheus-wireguard-exporter
+    container_name: prometheus_exporter
+    ports:
+      - 9586
+    volumes:
+      - /opt/docker/subspace:/data
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    network_mode: "host"
+    command: "-a -n /data/wireguard/server.conf"
+```
+
+Example `server.conf`:
+
+```ini
+[Interface]
+PrivateKey = {REDACTED}
+ListenPort = 51820
+
+[Peer]
+# friendly_json = {"user_type":"admin","user_email":"example@email.com","profile_name":"profile","platform":"linux"}
+PublicKey = zYc+fEXAAioY11STY2zEC2ydKg9NS7TqYe8TIqOONwo=
+AllowedIPs = 10.99.97.8/32,fd00::10:97:8/128
+```
+
+Getting the prometheus metrics with `curl http://localhost:9586/metrics`:
+
+```
+# HELP wireguard_latest_handshake_seconds Seconds from the last handshake
+# TYPE wireguard_latest_handshake_seconds gauge
+wireguard_latest_handshake_seconds{interface="wg0",public_key="zYc+fEXAAioY11STY2zEC2ydKg9NS7TqYe8TIqOONwo=",allowed_ips="10.99.97.8/32,fd00::10:97:8/128",platform="linux",profile_name="profile",user_email="example@email.com",user_type="admin"} 0
 ```
 
 #### Updating the container image
