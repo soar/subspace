@@ -344,10 +344,16 @@ func profileAddHandler(w *Web) {
 	}
 
 	var userID string
+	var email string
+	var userType string
 	if admin {
 		userID = ""
+		email = config.FindInfo().Email
+		userType = "admin"
 	} else {
 		userID = w.User.ID
+		email = w.User.Email
+		userType = "user"
 	}
 
 	if len(config.ListProfiles()) >= maxProfiles {
@@ -416,14 +422,14 @@ wg set wg0 peer ${wg_public_key} allowed-ips {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{
 
 cat <<WGPEER >peers/{{$.Profile.ID}}.conf
 [Peer]
-# friendly_name = {{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
+# friendly_name = {{$.UserType}}:{{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
 PublicKey = ${wg_public_key}
 AllowedIPs = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/32{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/128{{end}}
 WGPEER
 
 cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
-# friendly_name = {{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
+# friendly_name = {{$.UserType}}:{{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
 PrivateKey = ${wg_private_key}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
 Address = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/{{$.IPv4Cidr}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/{{$.IPv6Cidr}}{{end}}
@@ -438,6 +444,7 @@ WGCLIENT
 	_, err = bash(script, struct {
 		Profile      Profile
 		Email        string
+		UserType     string
 		EndpointHost string
 		Datadir      string
 		IPv4Gw       string
@@ -452,7 +459,8 @@ WGCLIENT
 		Ipv6Enabled  bool
 	}{
 		profile,
-		w.User.Email,
+		email,
+		userType,
 		endpointHost,
 		datadir,
 		ipv4Gw,
@@ -517,6 +525,11 @@ func profileDeleteHandler(w *Web) {
 	if err := deleteProfile(profile); err != nil {
 		logger.Errorf("delete profile failed: %s", err)
 		w.Redirect("/profile/delete?error=deleteprofile")
+		return
+	}
+	_, err = serverConfig.Update()
+	if err != nil {
+		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=deleteprofile")
 		return
 	}
 	if profile.UserID != "" {

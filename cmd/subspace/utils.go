@@ -79,17 +79,17 @@ func logErrorAndRedirect(err error, w *Web, file string, redirectTo string) {
 }
 
 type MutexBash struct {
-	sync.Mutex
+	m sync.Mutex
 }
 
 func (mb *MutexBash) Bash(tmpl string, params interface{}) (string, error) {
-	mb.Lock()
-	defer mb.Unlock()
+	mb.m.Lock()
+	defer mb.m.Unlock()
 	return bash(tmpl, params)
 }
 
 type ServerConfig struct {
-	MutexBash
+	mb MutexBash
 }
 
 func (sc *ServerConfig) Update() (string, error) {
@@ -104,7 +104,7 @@ ListenPort = ${SUBSPACE_LISTENPORT}
 WGSERVER
 cat peers/*.conf >>server.conf
 `
-	return sc.Bash(script, struct {
+	return sc.mb.Bash(script, struct {
 		Datadir string
 	}{
 		datadir,
