@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -67,4 +68,45 @@ set -o xtrace
 		return string(output), fmt.Errorf("command failed: %s\n%s", err, string(output))
 	}
 	return string(output), nil
+}
+
+func logErrorAndRedirect(err error, w *Web, file string, redirectTo string) {
+	logger.Warn(err)
+	f, _ := os.Create(file)
+	errstr := fmt.Sprintln(err)
+	f.WriteString(errstr)
+	w.Redirect(redirectTo)
+}
+
+type MutexBash struct {
+	sync.Mutex
+}
+
+func (mb *MutexBash) Bash(tmpl string, params interface{}) (string, error) {
+	mb.Lock()
+	defer mb.Unlock()
+	return bash(tmpl, params)
+}
+
+type ServerConfig struct {
+	MutexBash
+}
+
+func (sc *ServerConfig) Update() (string, error) {
+	script := `
+cd {{$.Datadir}}/wireguard
+
+cat <<WGSERVER >server.conf
+[Interface]
+PrivateKey = $(cat server.private)
+ListenPort = ${SUBSPACE_LISTENPORT}
+
+WGSERVER
+cat peers/*.conf >>server.conf
+`
+	return sc.Bash(script, struct {
+		Datadir string
+	}{
+		datadir,
+	})
 }

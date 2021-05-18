@@ -143,21 +143,21 @@ if ! test -d /data/wireguard; then
   cd /data/wireguard
 
   mkdir clients
-  touch clients/null.conf # So you can cat *.conf safely
   mkdir peers
-  touch peers/null.conf # So you can cat *.conf safely
 
   # Generate public/private server keys.
   wg genkey | tee server.private | wg pubkey > server.public
-fi
 
-cat <<WGSERVER >/data/wireguard/server.conf
+  # generate initial server.conf
+  # this config file will be updated each time a new peer is added
+  cat <<WGSERVER >/data/wireguard/server.conf
 [Interface]
 PrivateKey = $(cat /data/wireguard/server.private)
 ListenPort = ${SUBSPACE_LISTENPORT}
 
 WGSERVER
-cat /data/wireguard/peers/*.conf >>/data/wireguard/server.conf
+fi
+
 umask ${umask_val}
 [ -f /data/config.json ] && chmod 600 /data/config.json # Special handling of file not created by start-up script
 

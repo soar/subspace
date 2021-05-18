@@ -416,12 +416,14 @@ wg set wg0 peer ${wg_public_key} allowed-ips {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{
 
 cat <<WGPEER >peers/{{$.Profile.ID}}.conf
 [Peer]
+# friendly_name = {{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
 PublicKey = ${wg_public_key}
 AllowedIPs = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/32{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/128{{end}}
 WGPEER
 
 cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
+# friendly_name = {{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
 PrivateKey = ${wg_private_key}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
 Address = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/{{$.IPv4Cidr}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/{{$.IPv6Cidr}}{{end}}
@@ -435,6 +437,7 @@ WGCLIENT
 `
 	_, err = bash(script, struct {
 		Profile      Profile
+		Email        string
 		EndpointHost string
 		Datadir      string
 		IPv4Gw       string
@@ -449,6 +452,7 @@ WGCLIENT
 		Ipv6Enabled  bool
 	}{
 		profile,
+		w.User.Email,
 		endpointHost,
 		datadir,
 		ipv4Gw,
@@ -463,11 +467,13 @@ WGCLIENT
 		ipv6Enabled,
 	})
 	if err != nil {
-		logger.Warn(err)
-		f, _ := os.Create("/tmp/error.txt")
-		errstr := fmt.Sprintln(err)
-		f.WriteString(errstr)
-		w.Redirect("/?error=addprofile")
+		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=addprofile")
+		return
+	}
+
+	_, err = serverConfig.Update()
+	if err != nil {
+		logErrorAndRedirect(err, w, "/tmp/error.txt", "/?error=addprofile")
 		return
 	}
 

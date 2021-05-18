@@ -79,6 +79,9 @@ var (
 
 	// theme
 	semanticTheme string
+
+	// server config handler
+	serverConfig *ServerConfig
 )
 
 func init() {
@@ -143,6 +146,9 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	// server.conf update mutex bash
+	serverConfig = &ServerConfig{}
 
 	// Secure token
 	securetoken = securecookie.New([]byte(config.FindInfo().HashKey), []byte(config.FindInfo().BlockKey))
