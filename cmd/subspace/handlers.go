@@ -344,16 +344,20 @@ func profileAddHandler(w *Web) {
 	}
 
 	var userID string
-	var email string
-	var userType string
 	if admin {
 		userID = ""
-		email = config.FindInfo().Email
-		userType = "admin"
 	} else {
 		userID = w.User.ID
+	}
+
+	var email string
+	var userType string
+	if w.User.Email == "" {
+		email = config.Info.Email
+		userType = "admin"
+	} else {
 		email = w.User.Email
-		userType = "user"
+		userType = "client"
 	}
 
 	if len(config.ListProfiles()) >= maxProfiles {
@@ -420,16 +424,20 @@ wg_public_key="$(echo $wg_private_key | wg pubkey)"
 
 wg set wg0 peer ${wg_public_key} allowed-ips {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/32{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/128{{end}}
 
+function get_friendly_json {
+	echo '{"user_type":"{{$.UserType}}","user_email":"{{$.Email}}","profile_name":"{{$.Profile.Name}}","platform":"{{$.Profile.Platform}}"}'
+}
+
 cat <<WGPEER >peers/{{$.Profile.ID}}.conf
 [Peer]
-# friendly_name = {{$.UserType}}:{{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
+# friendly_json = $(get_friendly_json)
 PublicKey = ${wg_public_key}
 AllowedIPs = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/32{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/128{{end}}
 WGPEER
 
 cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
-# friendly_name = {{$.UserType}}:{{$.Email}}:{{$.Profile.Name}}:{{$.Profile.Platform}}
+# friendly_json = $(get_friendly_json)
 PrivateKey = ${wg_private_key}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
 Address = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/{{$.IPv4Cidr}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/{{$.IPv6Cidr}}{{end}}
