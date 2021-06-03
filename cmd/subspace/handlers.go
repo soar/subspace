@@ -417,6 +417,10 @@ func profileAddHandler(w *Web) {
 	if enable := getEnv("SUBSPACE_IPV6_NAT_ENABLED", "1"); enable == "0" {
 		ipv6Enabled = false
 	}
+	disableDNS := false
+	if shouldDisableDNS := getEnv("SUBSPACE_DISABLE_DNS", "0"); shouldDisableDNS == "1" {
+		disableDNS = true
+	}
 
 	script := `
 cd {{$.Datadir}}/wireguard
@@ -440,7 +444,9 @@ cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
 # friendly_json = $(get_friendly_json)
 PrivateKey = ${wg_private_key}
+{{- if not .DisableDNS }}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
+{{- end }}
 Address = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/{{$.IPv4Cidr}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/{{$.IPv6Cidr}}{{end}}
 
 [Peer]
@@ -466,6 +472,7 @@ WGCLIENT
 		AllowedIPS   string
 		Ipv4Enabled  bool
 		Ipv6Enabled  bool
+		DisableDNS   bool
 	}{
 		profile,
 		email,
@@ -482,6 +489,7 @@ WGCLIENT
 		allowedips,
 		ipv4Enabled,
 		ipv6Enabled,
+		disableDNS,
 	})
 	if err != nil {
 		logErrorAndRedirect(err, w, errorFile, "/?error=addprofile")
