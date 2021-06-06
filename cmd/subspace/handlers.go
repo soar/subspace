@@ -547,7 +547,7 @@ WGCLIENT
 		return
 	}
 
-	_, err = serverConfig.Update()
+	_, err = WireguardServerConfig.Update()
 	if err != nil {
 		logErrorAndRedirect(err, w, errorFile, "/?error=addprofile")
 		return
@@ -595,7 +595,7 @@ func profileDeleteHandler(w *Web) {
 		w.Redirect("/profile/delete?error=deleteprofile")
 		return
 	}
-	_, err = serverConfig.Update()
+	_, err = WireguardServerConfig.Update()
 	if err != nil {
 		logErrorAndRedirect(err, w, errorFile, "/?error=deleteprofile")
 		return

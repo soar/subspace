@@ -82,7 +82,7 @@ var (
 	semanticTheme string
 
 	// server config handler
-	serverConfig *ServerConfig
+	wireguardServerConfig *WireguardServerConfig
 
 	// Totp
 	tempTotpKey *otp.Key
@@ -152,8 +152,9 @@ func main() {
 	}
 
 	// server.conf update mutex bash
-	serverConfig = &ServerConfig{}
-	serverConfig.Update()
+	wireguardServerConfig = &WireguardServerConfig{}
+	wireguardServerConfig.Update()
+	wireguardServerConfig.Sync()
 
 	// TOTP
 	err = config.GenerateTOTP()

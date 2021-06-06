@@ -88,11 +88,11 @@ func (mb *MutexBash) Bash(tmpl string, params interface{}) (string, error) {
 	return bash(tmpl, params)
 }
 
-type ServerConfig struct {
+type WireguardServerConfig struct {
 	mb MutexBash
 }
 
-func (sc *ServerConfig) Update() (string, error) {
+func (sc *WireguardServerConfig) Update() (string, error) {
 	script := `
 cd {{$.Datadir}}/wireguard
 
@@ -103,6 +103,18 @@ ListenPort = ${SUBSPACE_LISTENPORT}
 
 WGSERVER
 cat peers/*.conf >>server.conf
+`
+	return sc.mb.Bash(script, struct {
+		Datadir string
+	}{
+		datadir,
+	})
+}
+
+func (sc *WireguardServerConfig) Sync() (string, error) {
+	script := `
+cd {{$.Datadir}}/wireguard
+wg syncconf wg0 server.conf
 `
 	return sc.mb.Bash(script, struct {
 		Datadir string
