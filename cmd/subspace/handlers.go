@@ -494,7 +494,6 @@ WGPEER
 
 cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
-# friendly_json = $(get_friendly_json)
 PrivateKey = ${wg_private_key}
 {{- if not .DisableDNS }}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
