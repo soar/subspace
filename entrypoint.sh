@@ -154,15 +154,13 @@ if ! test -d /data/wireguard; then
 
   # Generate public/private server keys.
   wg genkey | tee server.private | wg pubkey >server.public
-fi
 
   # generate initial server.conf
-  # this config file will be updated each time a new peer is added
+  # this config file will be later updated by subspace itself each time a new client file is added
   cat <<WGSERVER >/data/wireguard/server.conf
 [Interface]
 PrivateKey = $(cat /data/wireguard/server.private)
 ListenPort = ${SUBSPACE_LISTENPORT}
-
 WGSERVER
 fi
 
