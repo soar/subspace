@@ -1,7 +1,7 @@
 # Subspace - A simple WireGuard VPN server GUI
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-22-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-25-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![](https://images.microbadger.com/badges/image/subspacecommunity/subspace.svg)](https://microbadger.com/images/subspacecommunity/subspace "Get your own image badge on microbadger.com") [![](https://images.microbadger.com/badges/version/subspacecommunity/subspace.svg)](https://microbadger.com/images/subspacecommunity/subspace "Get your own version badge on microbadger.com")
@@ -169,18 +169,20 @@ docker create \
     --network host \
     --cap-add NET_ADMIN \
     --volume /data:/data \
+    # Optional directory for mounting dnsmasq configurations
+    --volume /etc/dnsmasq.d:/etc/dnsmasq.d \
     --env SUBSPACE_HTTP_HOST="subspace.example.com" \
-	# Optional variable to change upstream DNS provider
+    # Optional variable to change upstream DNS provider
     --env SUBSPACE_NAMESERVERS="1.1.1.1,8.8.8.8" \
-	# Optional variable to change WireGuard Listenport
+    # Optional variable to change WireGuard Listenport
     --env SUBSPACE_LISTENPORT="51820" \
   # Optional variables to change IPv4/v6 prefixes
     --env SUBSPACE_IPV4_POOL="10.99.97.0/24" \
     --env SUBSPACE_IPV6_POOL="fd00::10:97:0/64" \
-	# Optional variables to change IPv4/v6 Gateway
+    # Optional variables to change IPv4/v6 Gateway
     --env SUBSPACE_IPV4_GW="10.99.97.1" \
     --env SUBSPACE_IPV6_GW="fd00::10:97:1" \
-	# Optional variable to enable or disable IPv6 NAT
+    # Optional variable to enable or disable IPv6 NAT
     --env SUBSPACE_IPV6_NAT_ENABLED=1 \
   # Optional variable to disable DNS server. Enabled by default.
   # consider disabling DNS server, if supporting international VPN clients
@@ -205,6 +207,7 @@ services:
     container_name: subspace
     volumes:
       - /opt/docker/subspace:/data
+      - /opt/docker/dnsmasq:/etc/dnsmasq.d
     restart: always
     environment:
       - SUBSPACE_HTTP_HOST=subspace.example.org
@@ -218,6 +221,7 @@ services:
       - SUBSPACE_IPV4_GW=10.99.97.1
       - SUBSPACE_IPV6_GW=fd00::10:97:1
       - SUBSPACE_IPV6_NAT_ENABLED=1
+      - SUBSPACE_DISABLE_DNS=0
     cap_add:
       - NET_ADMIN
     network_mode: "host"
@@ -339,6 +343,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/gchamon"><img src="https://avatars.githubusercontent.com/u/9471861?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Gabriel Chamon Araujo</b></sub></a><br /><a href="https://github.com/subspacecommunity/subspace/commits?author=gchamon" title="Code">💻</a></td>
+    <td align="center"><a href="http://alexflor.es"><img src="https://avatars.githubusercontent.com/u/4605783?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alex Flores</b></sub></a><br /><a href="https://github.com/subspacecommunity/subspace/commits?author=audibleblink" title="Code">💻</a></td>
+    <td align="center"><a href="https://jaredpbostic.com/about/"><img src="https://avatars.githubusercontent.com/u/5026236?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Jared P Bostic</b></sub></a><br /><a href="https://github.com/subspacecommunity/subspace/commits?author=jpbostic" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/ThisIsQasim"><img src="https://avatars.githubusercontent.com/u/18313886?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Qasim Mehmood</b></sub></a><br /><a href="https://github.com/subspacecommunity/subspace/commits?author=ThisIsQasim" title="Code">💻</a></td>
   </tr>
 </table>
 

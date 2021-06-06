@@ -153,7 +153,8 @@ if ! test -d /data/wireguard; then
   mkdir peers
 
   # Generate public/private server keys.
-  wg genkey | tee server.private | wg pubkey > server.public
+  wg genkey | tee server.private | wg pubkey >server.public
+fi
 
   # generate initial server.conf
   # this config file will be updated each time a new peer is added
@@ -203,6 +204,9 @@ if [[ ${SUBSPACE_DISABLE_DNS} == "0" ]]; then
 
     # Never forward addresses in the non-routed address spaces.
     bogus-priv
+    
+    # Allow extending dnsmasq by providing custom configurations.
+    conf-dir=/etc/dnsmasq.d
 DNSMASQ
 
     mkdir -p /etc/service/dnsmasq

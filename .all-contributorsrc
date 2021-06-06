@@ -202,6 +202,33 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "audibleblink",
+      "name": "Alex Flores",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4605783?v=4",
+      "profile": "http://alexflor.es",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jpbostic",
+      "name": "Jared P Bostic",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5026236?v=4",
+      "profile": "https://jaredpbostic.com/about/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "ThisIsQasim",
+      "name": "Qasim Mehmood",
+      "avatar_url": "https://avatars.githubusercontent.com/u/18313886?v=4",
+      "profile": "https://github.com/ThisIsQasim",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
