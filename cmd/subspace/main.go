@@ -153,6 +153,7 @@ func main() {
 
 	// server.conf update mutex bash
 	serverConfig = &ServerConfig{}
+	serverConfig.Update()
 
 	// TOTP
 	err = config.GenerateTOTP()
