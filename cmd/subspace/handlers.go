@@ -462,6 +462,10 @@ func profileAddHandler(w *Web) {
 	if shouldDisableDNS := getEnv("SUBSPACE_DISABLE_DNS", "0"); shouldDisableDNS == "1" {
 		disableDNS = true
 	}
+	clientNameServers := ""
+	if useClientNameServers := getEnv("SUBSPACE_CLIENT_NAMESERVERS", "nil"); useClientNameServers != "nil" {
+		clientNameServers = useClientNameServers
+	}
 	persistentKeepalive := "0"
 	if keepalive := getEnv("SUBSPACE_PERSISTENT_KEEPALIVE", "nil"); keepalive != "nil" {
 		persistentKeepalive = keepalive
@@ -484,7 +488,11 @@ cat <<WGCLIENT >clients/{{$.Profile.ID}}.conf
 [Interface]
 PrivateKey = ${wg_private_key}
 {{- if not .DisableDNS }}
+{{- if .ClientNameServers }}
+DNS = {{.ClientNameServers}}
+{{- else }}
 DNS = {{if .Ipv4Enabled}}{{$.IPv4Gw}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Gw}}{{end}}
+{{- end }}
 {{- end }}
 Address = {{if .Ipv4Enabled}}{{$.IPv4Pref}}{{$.Profile.Number}}/{{$.IPv4Cidr}}{{end}}{{if .Ipv6Enabled}}{{if .Ipv4Enabled}},{{end}}{{$.IPv6Pref}}{{$.Profile.Number}}/{{$.IPv6Cidr}}{{end}}
 
@@ -497,20 +505,21 @@ PersistentKeepalive = {{$.PersistentKeepalive}}
 WGCLIENT
 `
 	_, err = bash(script, struct {
-		Profile      		Profile
-		EndpointHost 		string
-		Datadir      		string
-		IPv4Gw       		string
-		IPv6Gw       		string
-		IPv4Pref     		string
-		IPv6Pref     		string
-		IPv4Cidr     		string
-		IPv6Cidr     		string
-		Listenport   		string
-		AllowedIPS   		string
-		Ipv4Enabled  		bool
-		Ipv6Enabled  		bool
-		DisableDNS   		bool
+		Profile             Profile
+		EndpointHost        string
+		Datadir             string
+		IPv4Gw              string
+		IPv6Gw              string
+		IPv4Pref            string
+		IPv6Pref            string
+		IPv4Cidr            string
+		IPv6Cidr            string
+		Listenport          string
+		AllowedIPS          string
+		Ipv4Enabled         bool
+		Ipv6Enabled         bool
+		DisableDNS          bool
+		ClientNameServers   string
 		PersistentKeepalive string
 	}{
 		profile,
@@ -527,6 +536,7 @@ WGCLIENT
 		ipv4Enabled,
 		ipv6Enabled,
 		disableDNS,
+		clientNameServers,
 		persistentKeepalive,
 	})
 	if err != nil {
